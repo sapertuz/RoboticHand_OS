@@ -104,7 +104,7 @@ void sensorMod::start(){
 }
 
 uint32_t sensorMod::isReady(){
-    uint16_t status = read32(STATUS_REG);
+    uint32_t status = read32(STATUS_REG);
     if ( (status & READY_MASK) == ISREADY ){
     	get_filteredData();
     	return 1;
