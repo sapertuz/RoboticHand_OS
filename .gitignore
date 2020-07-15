@@ -1,22 +1,6 @@
 # --- VIVADO & SDK common ---
 
 
-# folders (and all of their contents) that should always be ignored,
-# anywhere in the repo
-.Xil/
-
-# file patterns that should always be ignored (journal files, log
-# files, dump files that are created upon Vivado/SDK errors)
-
-*.jou
-*.log
-*.backup.jou
-*.backup.log
-*.upgrade_log
-*.dmp
-vivado_pid*
-*~
-
 # ignore 'ip_lib' which contains custom IP pulled from bitbucket by the build script
 #/ip_lib/
 

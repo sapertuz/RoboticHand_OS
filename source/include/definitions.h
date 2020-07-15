@@ -10,7 +10,7 @@
 
 #define M_FLOAT
 //#define M_DOUBLE
-
+//
 #ifdef M_FLOAT
 typedef float _real;
 #define MAX_VALUE FLT_MAX
