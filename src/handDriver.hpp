@@ -7,6 +7,7 @@
 
 #include "SensorMod.hpp"
 #include "PID_v1.h"
+#include "Impedance_v1.hpp"
 #include "MotorDriver.hpp"
 
 #include "XTime_Meas.h"
@@ -99,24 +100,46 @@
  * @name Parameters for the Impedance Controllers
  * @{
  */
-#define dt	5	// Filter and Control Period in milliSeconds
-#define M 	0.528404343800586
-#define K 	88.6173474407601
-#define B 	9.58011226419688
-#define P 	0.4	// Proportional P gain
-#define outMax	4.0	// Maximum output P controller
-#define outMin	-4.0	// Minimum output P controller
+#define DT		5		// Filter and Control Period in milliSeconds
+#define M 		8/6		//8	//0.528404343800586
+#define K		5/6		//5	//88.6173474407601
+#define B		30/6	//30//9.58011226419688
+#define P 		0.1		// Proportional P gain
+#define outMax	6.0		// Maximum output P controller
+#define outMin	-3.0	// Minimum output P controller
 /*@}*/
 
 /**
  * @name Parameters for the filters
  * @{
  */
-#define R 		4e-3
-#define nQ 		10000
+#define R 		1e-1
+#define nQ 		200
 #define a		-0.9450
 #define b 		0.0275
 #define cenCurr	22500.0
+/*@}*/
+
+/**
+ * @name Control Type Definitions
+ * @{
+ */
+#define UNOPERATIONAL	0
+#define MANUAL_MOTORS	1
+#define P_ONLY			2
+#define FULL_IMPEDANCE	3
+/*@}*/
+
+/**
+ * @name Impedance Fingers Control Activation
+ * @{
+ */
+// 						   7  6  5  4  3  2  1  0
+// 							 P1  A  C I1 I2  M P2
+#define NO_FINGERS 	0x00// 0  0  0  0  0  0  0  0
+#define ALL_FINGERS	0x7F// 0  1  1  1  1  1  1  1
+#define TRI_FINGERS	0x58// 0  1  0  1  1  0  0  0
+#define INX_FINGERS	0x08// 0  0  0  0  1  0  0  0
 /*@}*/
 
 /**************************** Type Definitions ******************************/
@@ -130,62 +153,88 @@ class handDriver{
 		handDriver();
 		int initialize();
 
-		void linkSensors(_real *, _real *);
-		void linkSenFilters(_real *, _real *, _real *);
-		void linkControl(_real *, _real *, _real *);
+		void init_controllers();
+		void set_control(uint8_t);
+
+		void calibrateCurrentS();
+		void calibratePositionS(_real *);
+
+		void getSensors(_real *, _real *);
+		void getSenFilters(_real *, _real *, _real *);
+		void getControl(_real *, _real *, _real *);
 
 		void compute();
 		void shutdown();
 		void update_sensors();
 		void init_impOut();
 
+		void set_impFingers(uint8_t);
+		int set_currSP(_real *);
+		int set_posSP(_real *);
+		int set_motorV(_real *);
+
+		void printConfig();
+
 	/************************** Variable Definitions ****************************/
 	private:
-
 
 	/**
 	 * Controllers Input/Output Variables
 	 * @{
 	 */
-	_real posIn_f[Nmodules];	// Define Input Variables for filters
-	_real currIn_f[Nmodules];
-	//_real voltIn_f[Nmodules];
-	_real cenCurr_f[Nmodules];   // Define Center Current variable
-	_real posStart_f[Nmodules]; // Defin Star position of position sensors
+	_real posIn_f[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};		// Define Input Variables for filters
+	_real currIn_f[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};
 
-	_real pos_filt[Nmodules];	// Define Output Variables for filters
-	_real vel_filt[Nmodules];
-	_real curr_filt[Nmodules];
+				// Define Center Current variable
+	_real cenCurr_f[Nmodules] = 
+		{0, 0, 0, 0, 0, 0, 0};
+				// Define Star position of position sensors
+	_real posStart_f[Nmodules] = {
+		65535-16500,	// P2 0
+		9000,	// M  1
+		0,		// I2 2
+		7900,	// I1 3
+		10000,	// C  4
+		8900,	// A  5
+		8900,	// P1 6
+	};
 
-	_real voltOut[Nmodules];	// Define Variables to connect PID controller
+	_real pos_filt[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};		// Define Output Variables for filters
+	_real vel_filt[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};
+	_real curr_filt[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};
 
-	_real imp_sp[Nmodules];		// Variables to connect Impedance controller
-	_real impOut[Nmodules];
+	_real voltOut[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};		// Define Variables to connect PID controller
+	_real imp_sp[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};			// Variables to connect Impedance controller
+	_real impOut[Nmodules] =
+	{0, 0, 0, 0, 0, 0, 0};
 	/*@}*/
 
-	XAdcPs XAdcInst;      /* XADC driver instance */
+	uint16_t imp_index=0;
+
+	XAdcPs XAdcInst;      			// XADC driver instance
 	XAdcPs *XAdcInstPtr = &XAdcInst;
+	XAdcPs_Config *ConfigPtr;
 
-	/**
-	 * Create handlers for MotorDriver
-	 * {
-	 */
-	motorDriver *motorsHandler_p;
-	/*}*/
+	motorDriver motorsHandler;		// Create handlers for MotorDriver
+	sensorMod sensorHandler; 		// Create handlers for sensorMod
+	PID pidControllers[Nmodules];	// Create Proportional controllers objects
+	Impedance ImpControllers[Nmodules]; // Create Impedance controllers objects
 
-	/**
-	 * Create handlers for sensorMod
-	 * {
-	 */
-	sensorMod *sensorHandler_p;
-	/*}*/
-
-	/**
-	 * Create Proportional controllers objects
-	 * {
-	 */
-	PID pidControllers[Nmodules];
-	/*}*/
+	/* Control Type
+	 * 0 - Control off
+	 * 1 - Control manual
+	 * 2 - Control PID position
+	 * 3 - Control Impedance + PID
+	*/
+	uint8_t control_t = 0;
+	
 };
 /*****************************************************************************/
 

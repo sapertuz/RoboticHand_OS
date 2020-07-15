@@ -4,12 +4,12 @@
 //***********************************************  Constructor
 
 // Constructor (without allocation)
-sensorMod::sensorMod(const uint32_t _addr,
-		float* posIn, float* currIn, float* voltIn,
-		float* pos_filt, float* vel_filt, float* curr_filt){
-    
-	this->virtAddr = _addr;
+sensorMod::sensorMod(){
+	this->lastTime = (uint64_t)millis();
+}
 
+void sensorMod::setAddress(const uint32_t _addr){
+	this->virtAddr = _addr;
 
 	/**
 	 * Reset SensorMod
@@ -64,7 +64,14 @@ sensorMod::sensorMod(const uint32_t _addr,
 	}
 	this->position_start._uint32 = posStart;
 	/*}*/
-    
+
+	this->SampleTime = this->dt._float32[0]*1000;
+
+}
+
+void sensorMod::setDataMonitor( float* posIn, float* currIn, float* voltIn,
+								float* pos_filt, float* vel_filt, float* curr_filt)
+{
 	// Filter;
     this->filt_pos._float32 = (float *)pos_filt;
 	this->filt_vel._float32 = (float *)vel_filt;
@@ -73,11 +80,7 @@ sensorMod::sensorMod(const uint32_t _addr,
 	this->posIn._float32 = (float *)posIn;
 	this->currIn._float32 = (float *)currIn;
 	this->voltIn._float32 = (float *)voltIn;
-
-	this->SampleTime = this->dt._float32[0]*1000;
-	this->lastTime = (uint64_t)millis();
 }
-
 
 //***********************************************  Calculating Functions
 void sensorMod::start(){
