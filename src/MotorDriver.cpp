@@ -4,7 +4,11 @@
 #include "xil_io.h"
 
 /************************** Function Definitions ***************************/ 
-motorDriver::motorDriver(const uint32_t _addr){
+motorDriver::motorDriver(){
+	this->virtAddr =  0;
+}
+
+void motorDriver::setAddress(const uint32_t _addr){
 	this->virtAddr =  _addr;
 }
 

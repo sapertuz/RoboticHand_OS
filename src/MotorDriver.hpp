@@ -18,7 +18,9 @@
 class motorDriver{
     public:
         // Creates UIO handler for /dev/uio* device
-        motorDriver(const uint32_t _addr);
+        motorDriver();
+
+        void setAddress(const uint32_t _addr);
         
         void setMotor(uint8_t pwmPin, double pid_Out);
         void disableMotors();

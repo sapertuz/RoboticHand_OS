@@ -51,8 +51,11 @@ typedef union sensorMod_union_t {
 class sensorMod{
 public:
 	//***********************************************  Constructor
-	sensorMod(const uint32_t addr,
-			float* posIn, float* currIn, float* voltIn, 
+	sensorMod();
+	
+	//***********************************************  Configuration
+	void setAddress(const uint32_t addr);
+	void setDataMonitor(float* posIn, float* currIn, float* voltIn, 
 			float* pos_filt, float* vel_filt, float* curr_filt);
 
 	//***********************************************  Calculating Functions
