@@ -105,7 +105,7 @@
 #define K		5/6		//5	//88.6173474407601
 #define B		30/6	//30//9.58011226419688
 #define P 		0.1		// Proportional P gain
-#define outMax	6.0		// Maximum output P controller
+#define outMax	4.0		// Maximum output P controller
 #define outMin	-3.0	// Minimum output P controller
 /*@}*/
 

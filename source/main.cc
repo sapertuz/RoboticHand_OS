@@ -5,13 +5,18 @@
 //#include <iostream>
 //#include <iomanip>
 
-#include "include\handDriver.hpp"
+#ifdef _WIN32
+	#include "include\handDriver.hpp"
+	#include "include\XTime_Meas.h"
+	#include "include\definitions.h"
+#else
+	#include "include/handDriver.hpp"
+	#include "include/XTime_Meas.h"
+	#include "include/definitions.h"
+#endif
 
-#include "include\XTime_Meas.h"
+
 #include "xuartps.h"
-//#include "keyboard_utils.h"
-
-#include "include\definitions.h"
 #include "xil_io.h"
 
 /************************** Constant Definitions ****************************/
@@ -83,6 +88,7 @@ bool flag_P2 = false, control_flag = false;
 
 int32_t whole[Nmodules], hundreds[Nmodules];
 uint16_t control = MANUAL_MOTORS;
+_real sumaStep = 25;
 
 handDriver robotHanDler;
 /*@}*/
@@ -310,9 +316,9 @@ void print_data(){
 					pos_sp[1] = 148;	// M  1
                 	}
                 	if (control == FULL_IMPEDANCE){
-					imp_sp[6] = 50;		// P1 6
+					imp_sp[6] = 110;		// P1 6
 					imp_sp[3] = 60;		// I1 3
-					imp_sp[4] = 50;		// C  4
+					imp_sp[4] = 60;		// C  4
                 	}
 					break;
 
@@ -338,6 +344,14 @@ void print_data(){
                 	}
 					break;
 
+                case 'v':
+                	if (control == FULL_IMPEDANCE){
+					imp_sp[6] = 110;		// P1 6
+					imp_sp[3] = 60;		// I1 3
+					imp_sp[4] = 60;		// C  4
+                	}
+                	break;
+
                 case 'b': // Tool 1
                 	if (control == P_ONLY){
                 	pos_sp[6] = 89;		// P1 6
@@ -346,6 +360,11 @@ void print_data(){
 					pos_sp[4] = 105;	// C  4
                 	pos_sp[5] = 130;	// A  5
 					pos_sp[1] = 144;	// M  1
+                	}
+                	if (control == FULL_IMPEDANCE){
+					imp_sp[6] = 110 + sumaStep;		// P1 6
+					imp_sp[3] = 60 + sumaStep;		// I1 3
+					imp_sp[4] = 60 + sumaStep;		// C  4
                 	}
 					break;
 
@@ -358,6 +377,11 @@ void print_data(){
                 	pos_sp[5] = 24;		// A  5
 					pos_sp[1] = 29;		// M  1
                 	}
+                	if (control == FULL_IMPEDANCE){
+					imp_sp[6] = 110 + 2*sumaStep;		// P1 6
+					imp_sp[3] = 60 + 2*sumaStep;		// I1 3
+					imp_sp[4] = 60 + 2*sumaStep;		// C  4
+                	}
 					break;
 
                 case 'm': // Tool 3
@@ -368,6 +392,11 @@ void print_data(){
 					pos_sp[4] = 29;		// C  4
                 	pos_sp[5] = 25;		// A  5
 					pos_sp[1] = 29;		// M  1
+                	}
+                	if (control == FULL_IMPEDANCE){
+					imp_sp[6] = 110 + 3*sumaStep;		// P1 6
+					imp_sp[3] = 60 + 3*sumaStep;		// I1 3
+					imp_sp[4] = 60 + 3*sumaStep;		// C  4
                 	}
 					break;
 
